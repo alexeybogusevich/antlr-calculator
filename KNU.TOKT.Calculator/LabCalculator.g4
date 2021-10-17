@@ -36,7 +36,7 @@ COMMA: ',';
 
 SIN: 'sin';
 COS: 'cos';
-TAN: 'tan';
+TAN: 'tg';
 
 INTEGER: DIGIT+;
 
