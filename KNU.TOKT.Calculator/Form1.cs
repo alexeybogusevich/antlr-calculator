@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
+using System.Globalization;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace KNU.TOKT.Calculator
 {
@@ -8,6 +10,7 @@ namespace KNU.TOKT.Calculator
     {
         private const int tabulatedValuesNumber = 10;
         private const int plotValuesNumber = 100;
+        private const int precision = 5;
 
         public FormMain()
         {
@@ -29,7 +32,7 @@ namespace KNU.TOKT.Calculator
             var expressionText = textBoxExpression.Text;
             var x = textBoxArgument.Text;
 
-            if (!double.TryParse(x, out var doubleValue))
+            if (!double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture, out var doubleValue))
             {
                 HandleInvalidInput(textBoxArgument, GetNumericErrorMessage("Argument"));
             }
@@ -51,12 +54,14 @@ namespace KNU.TOKT.Calculator
 
         private void buttonVisualize_Click(object sender, EventArgs e)
         {
-            if (!double.TryParse(textBoxX1.Text, out var x1))
+            var expressionText = textBoxExpression.Text;
+
+            if (!double.TryParse(textBoxX1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var x1))
             {
                 HandleInvalidInput(textBoxX1, GetNumericErrorMessage("Lower boundary"));
             }
 
-            if (!double.TryParse(textBoxX2.Text, out var x2))
+            if (!double.TryParse(textBoxX2.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var x2))
             {
                 HandleInvalidInput(textBoxX1, GetNumericErrorMessage("Upper boundary"));
             }
@@ -66,6 +71,13 @@ namespace KNU.TOKT.Calculator
                 HandleInvalidInput(textBoxX1, "Insufficient boundaries.");
             }
 
+            VisualizeTabulation(x1, x2, expressionText);
+
+            VisualizePlot(x1, x2, expressionText);
+        }
+
+        private string VisualizeTabulation(double x1, double x2, string expressionText)
+        {
             var table = new DataTable();
             table.Columns.AddRange(new DataColumn[3]
             {
@@ -75,20 +87,47 @@ namespace KNU.TOKT.Calculator
             });
 
             var step = (x2 - x1) / tabulatedValuesNumber;
-            var expressionText = textBoxExpression.Text;
             var x = x1;
 
-            for (int i = 0; i < tabulatedValuesNumber; ++i)
+            for (int i = 0; i <= tabulatedValuesNumber; ++i)
             {
                 var expression = expressionText
                     .Replace(nameof(x), x.ToString())
                     .Replace(" ", string.Empty);
 
-                table.Rows.Add(i, Math.Round(x, 5), Calculator.Evaluate(expression));
+                table.Rows.Add(i, Math.Round(x, precision), Calculator.Evaluate(expression));
                 x += step;
             }
 
             dataGridTabulation.DataSource = table;
+            return expressionText;
+        }
+
+        private void VisualizePlot(double x1, double x2, string expressionText)
+        {
+            var plotSource = new DataTable();
+            plotSource.Columns.Add("X", typeof(double));
+            plotSource.Columns.Add("Y", typeof(double));
+
+            var step = (x2 - x1) / plotValuesNumber;
+            var x = x1;
+
+            for (int i = 0; i <= plotValuesNumber; ++i)
+            {
+                var expression = expressionText
+                    .Replace(nameof(x), x.ToString())
+                    .Replace(" ", string.Empty);
+
+                plotSource.Rows.Add(Math.Round(x, precision), Calculator.Evaluate(expression));
+                x += step;
+            }
+
+            chartPlot.DataSource = plotSource;
+            chartPlot.Series["Series1"].XValueMember = "X";
+            chartPlot.Series["Series1"].YValueMembers = "Y";
+            chartPlot.Series["Series1"].ChartType = SeriesChartType.Line;
+
+            chartPlot.ChartAreas[0].AxisY.LabelStyle.Format = string.Empty;
         }
 
         private void HandleInvalidInput(TextBox textBox, string reason)

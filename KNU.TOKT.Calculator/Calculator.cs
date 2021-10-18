@@ -6,7 +6,8 @@ namespace KNU.TOKT.Calculator
     {
         public static double Evaluate(string expression)
         {
-            var lexer = new LabCalculatorLexer(new AntlrInputStream(expression));
+            var validExpression = expression.Replace(',', '.');
+            var lexer = new LabCalculatorLexer(new AntlrInputStream(validExpression));
             lexer.RemoveErrorListeners();
             lexer.AddErrorListener(new ThrowExceptionErrorListener());
 

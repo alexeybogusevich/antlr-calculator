@@ -9,23 +9,29 @@ namespace KNU.TOKT.Calculator
             Math.Pow(base.Visit(context.num), (int)base.Visit(context.pow));
 
         public override double VisitNumberExpression(LabCalculatorParser.NumberExpressionContext context) =>
-            double.Parse(context.GetText(), NumberStyles.Any);
+            double.Parse(context.GetText(), NumberStyles.Any, CultureInfo.InvariantCulture);
 
-        public override double VisitMultOrDivideExpression(LabCalculatorParser.MultOrDivideExpressionContext context) =>
-            context.op.Text switch
+        public override double VisitMultOrDivideExpression(LabCalculatorParser.MultOrDivideExpressionContext context)
+        {
+            switch (context.op.Text)
             {
-                "*" => (base.Visit(context.left) * base.Visit(context.right)),
-                "/" => (base.Visit(context.left) / base.Visit(context.right)),
-                _ => throw new ArgumentException($"Unsupported operator '{context.op.Text}'")
-            };
+                case "*": return (base.Visit(context.left) * base.Visit(context.right));
+                case "/": return (base.Visit(context.left) / base.Visit(context.right));
+                default:
+                    throw new ArgumentException($"Unsupported operator '{context.op.Text}'");
+            }
+        }
 
-        public override double VisitPlusOrMinusExpression(LabCalculatorParser.PlusOrMinusExpressionContext context) =>
-            context.op.Text switch
+        public override double VisitPlusOrMinusExpression(LabCalculatorParser.PlusOrMinusExpressionContext context)
+        {
+            switch (context.op.Text)
             {
-                "+" => (base.Visit(context.left) + base.Visit(context.right)),
-                "-" => (base.Visit(context.left) - base.Visit(context.right)),
-                _ => throw new ArgumentException($"Unsupported operator '{context.op.Text}'")
-            };
+                case "+": return (base.Visit(context.left) + base.Visit(context.right));
+                case "-": return (base.Visit(context.left) - base.Visit(context.right));
+                default:
+                    throw new ArgumentException($"Unsupported operator '{context.op.Text}'");
+            }
+        }
 
         public override double VisitCosinusExpression(LabCalculatorParser.CosinusExpressionContext context) =>
             Math.Cos(base.Visit(context.num));
